@@ -7,31 +7,14 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func BenchmarkParse(b *testing.B) {
-	type source struct {
-		ID        int64     `db:"id"`
-		Name      string    `db:"name"`
-		CreatedAt time.Time `db:"time"`
-		Ignore    string
-	}
-	data := source{ID: 1, Name: "test", CreatedAt: time.Now()}
-
-	for i := 0; i < b.N; i++ {
-		if _, err := New(data, false); err != nil {
-			b.Fatal(err)
-		}
-	}
-
+type source struct {
+	ID        int64     `db:"id"`
+	Name      string    `db:"name"`
+	CreatedAt time.Time `db:"time"`
+	Ignore    string
 }
 
 func TestParse(t *testing.T) {
-	type source struct {
-		ID        int64     `db:"id"`
-		Name      string    `db:"name"`
-		CreatedAt time.Time `db:"time"`
-		Ignore    string
-	}
-
 	var testcases = []struct {
 		name       string
 		source     interface{}
@@ -57,6 +40,25 @@ func TestParse(t *testing.T) {
 				assert.Contains(t, parser.NamedValues[0], ":"+contain)
 			}
 			assert.Len(t, parser.Data, testcase.len)
+		})
+	}
+}
+
+func TestQueryParser(t *testing.T) {
+	var testcases = []struct {
+		name   string
+		source interface{}
+		expect map[string]interface{}
+	}{
+		{name: "struct_1", source: source{ID: 1, Name: "test"}, expect: map[string]interface{}{"id": int64(1), "name": "test"}},
+	}
+
+	for _, testcase := range testcases {
+		t.Run(testcase.name, func(t *testing.T) {
+			conditon := make(map[string]interface{})
+			err := ParseConditions(testcase.source, conditon, false)
+			assert.Nil(t, err)
+			assert.Equal(t, testcase.expect, conditon)
 		})
 	}
 }

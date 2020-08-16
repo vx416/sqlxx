@@ -1,45 +1,54 @@
 package sqlxx
 
-type QueryContext interface {
-	SetupContext(exec *Executor) error
-	QueryHandle(exec *Executor, query string, args ...interface{}) error
+type Execr interface {
+	Do() error
+	LastInsertID() int64
+	RowsAffected() int64
 }
 
-func NewExec(queryCtx QueryContext, db *DB, table string, data interface{}) *Executor {
-	return &Executor{
-		queryContext: queryCtx,
-		db:           db,
-		table:        table,
-		data:         data,
+type ExecContext interface {
+	SetupContext(exec *Executor) (query string, args []interface{}, err error)
+	ExecHandle(exec *Executor, query string, args ...interface{}) error
+}
+
+func NewExec(db *DB, execCtx ExecContext, table string, data interface{}) *Executor {
+	exec := &Executor{
+		execContext: execCtx,
+		table:       table,
+		data:        data,
+		db:          db,
 	}
-}
-
-type Executor struct {
-	table        string
-	data         interface{}
-	queryContext QueryContext
-	query        string
-	args         []interface{}
-	db           *DB
-	LastInsertID int64
-	RowsAffected int64
+	return exec
 }
 
 type queryHandler func(exec *Executor)
-
-func (exec *Executor) addQueryArgs(query string, arg ...interface{}) {
-	exec.args = append(exec.args, arg...)
-	exec.query = query
+type Executor struct {
+	table        string
+	data         interface{}
+	execContext  ExecContext
+	db           *DB
+	QueryOpts    *QueryOptions
+	lastInsertID int64
+	rowsAffected int64
 }
 
 func (exec *Executor) Do() error {
-	if err := exec.queryContext.SetupContext(exec); err != nil {
+	query, args, err := exec.execContext.SetupContext(exec)
+	if err != nil {
 		return err
 	}
-	query := exec.db.Rebind(exec.query)
+	query = exec.db.Rebind(query)
 
-	if err := exec.queryContext.QueryHandle(exec, query, exec.args...); err != nil {
+	if err := exec.execContext.ExecHandle(exec, query, args...); err != nil {
 		return err
 	}
 	return nil
+}
+
+func (exec *Executor) LastInsertID() int64 {
+	return exec.lastInsertID
+}
+
+func (exec *Executor) RowsAffected() int64 {
+	return exec.rowsAffected
 }

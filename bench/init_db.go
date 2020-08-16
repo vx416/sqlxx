@@ -6,8 +6,6 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/vicxu416/sqlxx/testdata"
-
 	"gopkg.in/gorp.v1"
 
 	"github.com/jinzhu/gorm"
@@ -45,7 +43,7 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	gorpDB.AddTableWithName(testdata.User{}, "users").SetKeys(true, "id")
+	gorpDB.AddTableWithName(User{}, "users").SetKeys(true, "ID")
 
 }
 
@@ -56,7 +54,7 @@ type exec interface {
 func initDB(db exec) error {
 	_, f, _, _ := runtime.Caller(0)
 	dir := filepath.Dir(f)
-	initSQL, err := ioutil.ReadFile(filepath.Join(dir, "../testdata/init.sql"))
+	initSQL, err := ioutil.ReadFile(filepath.Join(dir, "./testdata/init.sql"))
 	if err != nil {
 		return err
 	}
@@ -66,6 +64,7 @@ func initDB(db exec) error {
 }
 
 func OpenSqlxx() (*sqlxx.DB, error) {
+
 	return sqlxx.Open("sqlite3", ":memory:")
 }
 

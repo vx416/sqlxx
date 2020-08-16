@@ -1,29 +1,29 @@
 package sqlxx
 
 import (
-	"github.com/jmoiron/sqlx"
-	"github.com/vicxu416/sqlxx/sqlbuilder"
+	"reflect"
 )
 
 type Insert struct {
 }
 
-func (queryCtx Insert) SetupContext(exec *Executor) error {
-	insertStmt, err := sqlbuilder.Insert(exec.table, exec.data)
+func (execCtx Insert) SetupContext(exec *Executor) (query string, args []interface{}, err error) {
+	query, data, err := exec.db.GetBuilder().BuildInsert(exec.table, exec.data)
 	if err != nil {
-		return err
+		return "", nil, err
 	}
-	query := insertStmt.Sql(exec.db.DBType())
-	exec.addQueryArgs(query, exec.data)
-	return nil
+	return query, data, nil
 }
 
-func (queryCtx Insert) QueryHandle(exec *Executor, query string, args ...interface{}) error {
-	switch exec.db.dbType {
+func (execCtx Insert) ExecHandle(exec *Executor, query string, args ...interface{}) error {
+	switch exec.db.driverName {
 	case PG:
-		return queryCtx.pgQuery(exec, query, args[0])
+		err := execCtx.pgQuery(exec, query, args...)
+		if err != nil {
+			return err
+		}
 	default:
-		result, err := exec.db.NamedExec(query, args[0])
+		result, err := exec.db.Exec(query, args...)
 		if err != nil {
 			return err
 		}
@@ -31,38 +31,43 @@ func (queryCtx Insert) QueryHandle(exec *Executor, query string, args ...interfa
 		if err != nil {
 			return err
 		}
-		exec.LastInsertID = id
-		return nil
+		exec.lastInsertID = id
 	}
+
+	val := reflect.ValueOf(exec.data)
+	if val.Kind() == reflect.Ptr {
+		valElem := val.Elem()
+		for i := 0; i < valElem.NumField(); i++ {
+			if valElem.Type().Field(i).Tag.Get("db") == "id" {
+				valElem.Field(i).SetInt(exec.lastInsertID)
+			}
+		}
+	}
+
+	return nil
 }
 
-func (queryCtx Insert) pgQuery(exec *Executor, query string, arg interface{}) error {
-	q, args, err := sqlx.BindNamed(sqlx.BindType(exec.db.DBType()), query, arg)
-	if err != nil {
-		return err
-	}
+func (execCtx Insert) pgQuery(exec *Executor, query string, args ...interface{}) error {
 	var id int64
-	if err := exec.db.QueryRowx(q, args...).Scan(&id); err != nil {
+	if err := exec.db.QueryRowx(query, args...).Scan(&id); err != nil {
 		return err
 	}
-	exec.LastInsertID = id
+	exec.lastInsertID = id
 	return nil
 }
 
 type BulkInsert struct {
 }
 
-func (queryCtx BulkInsert) SetupContext(exec *Executor) error {
-	insertStmt, values, err := sqlbuilder.BulkInsert(exec.table, exec.data)
+func (execCtx BulkInsert) SetupContext(exec *Executor) (string, []interface{}, error) {
+	query, values, err := exec.db.GetBuilder().BuildBulkInsert(exec.table, exec.data)
 	if err != nil {
-		return err
+		return "", nil, err
 	}
-	query := insertStmt.Sql(exec.db.DBType())
-	exec.addQueryArgs(query, values...)
-	return nil
+	return query, values, nil
 }
 
-func (queryCtx BulkInsert) QueryHandle(exec *Executor, query string, args ...interface{}) error {
+func (execCtx BulkInsert) ExecHandle(exec *Executor, query string, args ...interface{}) error {
 	result, err := exec.db.Exec(query, args...)
 	if err != nil {
 		return err
@@ -71,7 +76,7 @@ func (queryCtx BulkInsert) QueryHandle(exec *Executor, query string, args ...int
 	if err != nil {
 		return err
 	}
-	exec.RowsAffected = rowsAffected
+	exec.rowsAffected = rowsAffected
 
 	return nil
 }

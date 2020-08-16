@@ -6,35 +6,34 @@ import (
 	"github.com/vicxu416/sqlxx/sqlbuilder/parsers"
 )
 
-func BulkInsert(table string, source interface{}) (*Builder, []interface{}, error) {
+func (builder *Builder) BuildBulkInsert(table string, source interface{}) (string, []interface{}, error) {
 	parser, err := parsers.New(source, false)
 	if err != nil {
-		return nil, nil, err
+		return "nil", []interface{}{}, err
 	}
-	insert := InsertStmt{
+	builder.stmt = InsertStmt{
 		fields: parser.Fields,
 		values: parser.Values,
 		table:  table,
 	}
 
 	if err != nil {
-		return nil, nil, err
+		return "", []interface{}{}, err
 	}
-	return &Builder{stmt: insert}, parser.Data, nil
-
+	return builder.Sql(), parser.Data, nil
 }
 
-func Insert(table string, source interface{}) (*Builder, error) {
+func (builder *Builder) BuildInsert(table string, source interface{}) (string, []interface{}, error) {
 	parser, err := parsers.New(source, false)
 	if err != nil {
-		return nil, err
+		return "", []interface{}{}, err
 	}
-	insert := InsertStmt{
+	builder.stmt = InsertStmt{
 		fields: parser.Fields,
-		values: parser.NamedValues,
+		values: parser.Values,
 		table:  table,
 	}
-	return &Builder{stmt: insert}, nil
+	return builder.Sql(), parser.Data, nil
 }
 
 type InsertStmt struct {
@@ -71,8 +70,8 @@ func (stmt InsertStmt) Values(driver driverType) string {
 	return builder.String()
 }
 
-func (stmt InsertStmt) Where(driver driverType) Where {
-	return nil
+func (stmt InsertStmt) Where(driver driverType) string {
+	return ""
 }
 
 func (stmt InsertStmt) End(driver driverType) string {
