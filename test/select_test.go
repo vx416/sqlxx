@@ -35,3 +35,17 @@ func (suite *CRUDSuite) TestSelectWhere() {
 	suite.Assert().NotZero(users[0].ID)
 	suite.Assert().Empty(users[0].FirstName)
 }
+
+func (suite *CRUDSuite) TestGet() {
+	user := NewUser()
+	exec := suite.db.Insert("users", &user)
+	err := exec.Do()
+	suite.Require().Nil(err)
+
+	query := sqlxx.NewQueryOpts()
+	query.Where("id = ?", user.ID)
+	user2 := User{}
+	err = suite.db.Get("users", &user2, query).Do()
+	suite.Require().Nil(err)
+	suite.Equal(user2.ID, user.ID)
+}

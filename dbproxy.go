@@ -124,6 +124,10 @@ func (db *proxyDB) Select(dest interface{}, query string, args ...interface{}) e
 	return sqlx.Select(db, dest, query, args...)
 }
 
+func (db *proxyDB) Get(dest interface{}, query string, args ...interface{}) error {
+	return sqlx.Get(db, dest, query, args...)
+}
+
 func newDefualtLogger() Logger {
 	return logger{Logger: log.New(os.Stdout, "", log.Ldate|log.Ltime)}
 }

@@ -85,6 +85,15 @@ func (db *DB) Select(table string, data interface{}, options *QueryOptions) Exec
 	return exec
 }
 
+func (db *DB) Get(table string, data interface{}, options *QueryOptions) Execr {
+	exec := NewExec(db, SelectCtx{get: true}, table, data)
+	if options == nil {
+		options = NewQueryOpts()
+	}
+	exec.QueryOpts = options
+	return exec
+}
+
 func (db *DB) Debug(on bool) {
 	db.proxyDB.debug = on
 }
