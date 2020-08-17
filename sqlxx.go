@@ -1,6 +1,7 @@
 package sqlxx
 
 import (
+	"database/sql"
 	"sync"
 
 	_ "github.com/lib/pq"
@@ -20,7 +21,23 @@ type DB struct {
 	*proxyDB
 	exec        *Executor
 	driverName  DBDriver
-	builderPool sync.Pool
+	builderPool *sync.Pool
+}
+
+func New(db *sql.DB, driver string) (*DB, error) {
+	sqlxDB := sqlx.NewDb(db, driver)
+	if err := sqlxDB.Ping(); err != nil {
+		return nil, err
+	}
+
+	builderPool := &sync.Pool{
+		New: func() interface{} {
+			return sqlbuilder.New(driver)
+		},
+	}
+
+	proxyDB := newProxyDB(sqlxDB)
+	return &DB{proxyDB: proxyDB, driverName: DBDriver(driver), builderPool: builderPool}, nil
 }
 
 func Open(driver, dataSourceName string) (*DB, error) {
@@ -32,7 +49,7 @@ func Open(driver, dataSourceName string) (*DB, error) {
 		return nil, err
 	}
 
-	builderPool := sync.Pool{
+	builderPool := &sync.Pool{
 		New: func() interface{} {
 			return sqlbuilder.New(driver)
 		},
@@ -44,6 +61,10 @@ func Open(driver, dataSourceName string) (*DB, error) {
 
 func (db *DB) GetBuilder() *sqlbuilder.Builder {
 	return db.builderPool.Get().(*sqlbuilder.Builder)
+}
+
+func (db *DB) SqlDB() *sql.DB {
+	return db.DB.DB
 }
 
 func (db *DB) Insert(table string, data interface{}) Execr {
