@@ -40,6 +40,13 @@ func New(db *sql.DB, driver string) (*DB, error) {
 	return &DB{proxyDB: proxyDB, driverName: DBDriver(driver), builderPool: builderPool}, nil
 }
 
+func (db *DB) UnSafe() *DB {
+	sqlxDB := db.proxyDB.DB.Unsafe()
+	clonedDB := db.Clone()
+	clonedDB.proxyDB.DB = sqlxDB
+	return clonedDB
+}
+
 func Open(driver, dataSourceName string) (*DB, error) {
 	db, err := sqlx.Open(driver, dataSourceName)
 	if err != nil {
