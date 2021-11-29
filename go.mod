@@ -1,12 +1,12 @@
 module github.com/vicxu416/sqlxx
 
-go 1.14
+go 1.16
 
 require (
-	github.com/jinzhu/gorm v1.9.15
-	github.com/jmoiron/sqlx v1.2.0
-	github.com/lib/pq v1.1.1
-	github.com/mattn/go-sqlite3 v1.14.0
-	github.com/stretchr/testify v1.6.1
-	gopkg.in/gorp.v1 v1.7.2
+	github.com/jmoiron/sqlx v1.3.4
+	github.com/pkg/errors v0.9.1
+	github.com/shopspring/decimal v1.3.1
+	github.com/stretchr/testify v1.7.0
+	gopkg.in/guregu/null.v4 v4.0.0
+	gorm.io/gorm v1.22.3
 )
