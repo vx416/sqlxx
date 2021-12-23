@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/vicxu416/sqlxx/builder"
-	"github.com/vicxu416/sqlxx/logger"
+	"github.com/vx416/sqlxx/builder"
+	"github.com/vx416/sqlxx/logger"
 )
 
 var ErrNilTx = errors.New("tx is nil")

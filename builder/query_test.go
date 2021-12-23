@@ -8,7 +8,7 @@ import (
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/vicxu416/sqlxx/logger"
+	"github.com/vx416/sqlxx/logger"
 	"gopkg.in/guregu/null.v4"
 )
 
