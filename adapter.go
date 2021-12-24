@@ -58,7 +58,7 @@ func (adapter *Sqlxx) ExecuteTx(ctx context.Context, fn func(txCtx context.Conte
 		}
 	}()
 	var callbackErr, txErr error
-	callbackErr = fn(ctx)
+	callbackErr = fn(txCtx)
 	if callbackErr != nil {
 		txErr = txDB.Rollback(txCtx)
 	} else {
