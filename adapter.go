@@ -40,7 +40,12 @@ func (adapter *Sqlxx) GetDB(ctx context.Context) *DB {
 	return adapter.db
 }
 
-func (adapter *Sqlxx) ExecuteTx(ctx context.Context, fn func(txCtx context.Context) error, txOpt *sql.TxOptions) error {
+func (adapter *Sqlxx) ExecuteTx(ctx context.Context, fn func(txCtx context.Context) error, txOpts ...*sql.TxOptions) error {
+	txOpt := &sql.TxOptions{}
+	if len(txOpts) > 0 {
+		txOpt = txOpts[0]
+	}
+
 	txDB, err := adapter.db.Begin(ctx, txOpt)
 	if err != nil {
 		return err
