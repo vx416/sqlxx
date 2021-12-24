@@ -8,7 +8,7 @@ import (
 
 type (
 	Logger interface {
-		WithFields(map[string]interface{}) Logger
+		WithFields(map[string]interface{})
 		Warn(string)
 		Info(string)
 		Debug(string)
@@ -92,7 +92,7 @@ func Print(ctx context.Context, rows int64, err error, cost time.Duration, query
 	if err != nil {
 		fields["error"] = err.Error()
 	}
-	l = l.WithFields(fields)
+	l.WithFields(fields)
 
 	if err != nil {
 		l.Error(sql)
