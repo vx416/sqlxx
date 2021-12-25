@@ -8,11 +8,10 @@ import (
 
 type (
 	Logger interface {
-		WithFields(map[string]interface{})
-		Warn(string)
-		Info(string)
-		Debug(string)
-		Error(string)
+		Warn(s string, fields map[string]interface{})
+		Info(s string, fields map[string]interface{})
+		Debug(s string, fields map[string]interface{})
+		Error(s string, fields map[string]interface{})
 	}
 
 	LoggerKey struct{}
@@ -92,16 +91,15 @@ func Print(ctx context.Context, rows int64, err error, cost time.Duration, query
 	if err != nil {
 		fields["error"] = err.Error()
 	}
-	l.WithFields(fields)
 
 	if err != nil {
-		l.Error(sql)
+		l.Error(sql, fields)
 	} else if cost > SlowThreshold {
-		l.Warn(sql)
+		l.Warn(sql, fields)
 	} else if level == Info {
-		l.Info(sql)
+		l.Info(sql, fields)
 	} else {
-		l.Debug(sql)
+		l.Debug(sql, fields)
 	}
 }
 
